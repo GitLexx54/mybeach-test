@@ -1,0 +1,1502 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Beach — Scoreboard</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root {
+    --gold: #e8a93c;
+    --gold-dim: rgba(232,169,60,0.35);
+    --bg: #0c1520;
+    --bg2: rgba(255,255,255,0.04);
+    --border: rgba(255,255,255,0.08);
+    --text: #ffffff;
+    --text-dim: rgba(255,255,255,0.45);
+    --text-hint: rgba(255,255,255,0.25);
+    --blue: #7ec8e3;
+    --red-dim: rgba(220,60,60,0.12);
+    --red-text: #e07070;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* NAV */
+  .nav {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding: 0 20px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(12,21,32,0.95);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .nav-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 0;
+    margin-right: 24px;
+    text-decoration: none;
+  }
+  .nav-logo img { height: 32px; }
+  .nav-logo-text {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--gold);
+    letter-spacing: 0.02em;
+  }
+  .nav-tab {
+    padding: 16px 18px;
+    font-size: 13px;
+    color: var(--text-dim);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    white-space: nowrap;
+    letter-spacing: 0.03em;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+  }
+  .nav-tab:hover { color: rgba(255,255,255,0.7); }
+  .nav-tab.active { color: var(--gold); border-bottom-color: var(--gold); }
+  .nav-tab svg { opacity: 0.6; }
+  .nav-tab.active svg { opacity: 1; }
+
+  /* VIEWS */
+  .view { display: none; }
+  .view.active { display: block; }
+
+  /* TV VIEW */
+  .tv-view {
+    min-height: calc(100vh - 50px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px 32px;
+    background: var(--bg);
+  }
+
+  .tv-logo {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 4px;
+  }
+  .tv-logo img { height: 48px; }
+  .tv-logo-placeholder {
+    width: 52px; height: 52px;
+    border-radius: 10px;
+    border: 1.5px dashed rgba(232,169,60,0.35);
+    background: rgba(232,169,60,0.07);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px; color: rgba(232,169,60,0.45);
+    text-align: center; line-height: 1.4;
+    letter-spacing: 0.05em;
+  }
+  .tv-logo-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 30px;
+    letter-spacing: 0.08em;
+    color: var(--gold);
+  }
+
+  /* [8] Название турнира на ТВ */
+  .tv-tournament {
+    font-size: 13px;
+    color: var(--text-dim);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    text-align: center;
+    min-height: 18px;
+  }
+
+  .tv-set-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .tv-set-label {
+    font-size: 11px;
+    color: var(--text-hint);
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+  }
+  .set-dots { display: flex; gap: 7px; align-items: center; }
+  .sdot {
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    transition: background 0.3s;
+  }
+  .sdot.done { background: var(--gold); }
+  .sdot.active { background: var(--gold-dim); border: 1.5px solid var(--gold); }
+  .sdot.empty { background: rgba(255,255,255,0.1); }
+
+  .tv-scoreboard {
+    display: grid;
+    grid-template-columns: 1fr 130px 1fr;
+    align-items: center;
+    width: 100%;
+    max-width: 900px;
+    gap: 0;
+  }
+
+  .tv-team {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* [1] Подчёркивание подающего игрока на ТВ */
+  .tv-player {
+    font-size: 34px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.88);
+    letter-spacing: 0.01em;
+    padding-bottom: 2px;
+    border-bottom: 2px solid transparent;
+    transition: border-color 0.3s, color 0.3s;
+  }
+  .tv-player.serving {
+    color: var(--gold);
+    border-bottom-color: var(--gold);
+  }
+
+  .tv-score {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 180px;
+    line-height: 1;
+    letter-spacing: 2px;
+    color: rgba(255,255,255,0.7);
+    transition: color 0.3s;
+    margin-top: 4px;
+  }
+  .tv-score.leading { color: var(--gold); }
+
+  .tv-serve-dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: var(--gold);
+    margin-top: 10px;
+    transition: opacity 0.3s;
+  }
+  .tv-serve-dot.hidden { opacity: 0; }
+
+  .tv-center {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+  .tv-vs {
+    font-size: 11px;
+    color: rgba(255,255,255,0.15);
+    letter-spacing: 0.25em;
+  }
+  .tv-sets {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 52px;
+    color: rgba(255,255,255,0.92);
+    letter-spacing: 6px;
+  }
+
+  .tv-history {
+    display: flex;
+    gap: 10px;
+    margin-top: 24px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .tv-hist-pill {
+    font-size: 13px;
+    color: rgba(232,169,60,0.65);
+    border: 1px solid rgba(232,169,60,0.2);
+    padding: 4px 16px;
+    border-radius: 20px;
+  }
+
+  /* ADMIN VIEW */
+  .admin-view {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 20px 16px 40px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .asec {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    transition: border-color 0.3s, background 0.3s;
+  }
+  .asec.needs-input {
+    background: rgba(232,169,60,0.06);
+    border-color: rgba(232,169,60,0.45);
+  }
+  .asec-title {
+    font-size: 10px;
+    color: var(--text-hint);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+    font-weight: 600;
+  }
+
+  .teams-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .team-block-label {
+    font-size: 10px;
+    color: rgba(255,255,255,0.28);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+    font-weight: 600;
+  }
+  .player-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+  }
+  .player-row:last-child { border-bottom: none; }
+
+  .chk {
+    width: 20px; height: 20px;
+    border-radius: 5px;
+    border: 1.5px solid rgba(255,255,255,0.2);
+    background: transparent;
+    cursor: pointer;
+    flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+  }
+  .chk.on { background: var(--gold); border-color: var(--gold); }
+  /* gone = другой игрок уже выбран — показываем бледно, не скрываем */
+  .chk.gone {
+    opacity: 0.2;
+    pointer-events: none;
+    cursor: default;
+  }
+  /* [4] disabled = у команды уже есть очки */
+  .chk.disabled {
+    opacity: 0.2;
+    pointer-events: none;
+    cursor: default;
+  }
+  .chk svg { display: none; }
+  .chk.on svg { display: block; }
+
+  /* [9] p-input fix — no re-render on input */
+  .p-input {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 6px;
+    color: var(--text);
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    padding: 6px 9px;
+    flex: 1;
+    outline: none;
+    transition: border-color 0.2s;
+    min-width: 0;
+  }
+  .p-input:focus { border-color: rgba(232,169,60,0.5); }
+
+  /* Tournament input */
+  .tournament-input {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 6px;
+    color: var(--text);
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    padding: 7px 10px;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .tournament-input:focus { border-color: rgba(232,169,60,0.5); }
+
+  .pick-hint {
+    margin-top: 8px;
+    padding: 7px 10px;
+    background: rgba(232,169,60,0.1);
+    border: 1px solid rgba(232,169,60,0.3);
+    border-radius: 7px;
+    font-size: 11px;
+    color: var(--gold);
+    display: none;
+  }
+  .pick-hint.show { display: block; }
+
+  /* Score section */
+  .score-ctrl {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 10px;
+  }
+  .score-side {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 7px;
+  }
+  .score-side-name {
+    font-size: 12px;
+    color: var(--text-dim);
+    text-align: center;
+    min-height: 18px;
+  }
+  .score-adm {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 72px;
+    line-height: 1;
+    letter-spacing: 2px;
+    color: var(--text);
+    min-width: 64px;
+    text-align: center;
+    transition: color 0.3s;
+  }
+  .score-adm.leading { color: var(--gold); }
+
+  .btn-row { display: flex; gap: 8px; align-items: center; }
+  .btn-plus {
+    background: var(--gold);
+    color: #0c1520;
+    border: none;
+    border-radius: 9px;
+    width: 56px; height: 56px;
+    font-size: 30px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+    font-family: 'Inter', sans-serif;
+    user-select: none;
+  }
+  .btn-plus:active { opacity: 0.75; transform: scale(0.93); }
+  .btn-minus {
+    background: rgba(255,255,255,0.07);
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    width: 38px; height: 38px;
+    font-size: 22px;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .btn-minus:active { opacity: 0.6; }
+
+  .srv-lbl {
+    font-size: 11px;
+    min-height: 16px;
+    color: var(--gold);
+    text-align: center;
+    font-weight: 500;
+  }
+  .nxt-lbl {
+    font-size: 11px;
+    min-height: 14px;
+    color: rgba(255,255,255,0.28);
+    text-align: center;
+  }
+
+  .score-mid {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 7px;
+  }
+  .colon {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 38px;
+    color: rgba(255,255,255,0.18);
+  }
+  .sets-mid {
+    font-size: 13px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+  }
+
+  /* [2] switch-badge — теперь кнопка */
+  .switch-badge {
+    display: none;
+    align-items: center;
+    gap: 6px;
+    background: rgba(126,200,227,0.1);
+    border: 1px solid rgba(126,200,227,0.4);
+    border-radius: 8px;
+    padding: 6px 11px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--blue);
+    white-space: nowrap;
+    letter-spacing: 0.04em;
+    animation: pulse 1.4s ease-in-out infinite;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.15s;
+  }
+  .switch-badge:active { background: rgba(126,200,227,0.2); }
+  .switch-badge.show { display: flex; }
+  @keyframes pulse {
+    0%,100% { border-color: rgba(126,200,227,0.35); }
+    50% { border-color: rgba(126,200,227,0.85); }
+  }
+
+  /* Timeout button */
+  .btn-timeout {
+    margin-top: 6px;
+    padding: 6px 18px;
+    border-radius: 7px;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    border: 1px solid rgba(232,169,60,0.4);
+    background: rgba(232,169,60,0.1);
+    color: var(--gold);
+    letter-spacing: 0.08em;
+    transition: all 0.15s;
+  }
+  .btn-timeout:active { opacity: 0.7; }
+  .btn-timeout.used {
+    background: rgba(255,255,255,0.04);
+    border-color: rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.2);
+    cursor: not-allowed;
+    text-decoration: line-through;
+  }
+
+  /* Bottom actions */
+  .act-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  .btn-act {
+    padding: 13px 10px;
+    border-radius: 9px;
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    border: none;
+    font-weight: 600;
+    transition: opacity 0.15s;
+    letter-spacing: 0.02em;
+  }
+  .btn-act:active { opacity: 0.7; }
+  .btn-end-set {
+    background: rgba(126,200,227,0.12);
+    color: var(--blue);
+    border: 1px solid rgba(126,200,227,0.28);
+  }
+  /* [3] Reset set button */
+  .btn-reset-set {
+    background: rgba(232,169,60,0.1);
+    color: var(--gold);
+    border: 1px solid rgba(232,169,60,0.28);
+  }
+  .btn-new-match {
+    background: var(--red-dim);
+    color: var(--red-text);
+    border: 1px solid rgba(220,60,60,0.22);
+  }
+
+  .winner-card {
+    background: rgba(232,169,60,0.1);
+    border: 1px solid rgba(232,169,60,0.28);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    display: none;
+  }
+  .winner-card.show { display: block; }
+  .winner-label {
+    font-size: 10px;
+    color: rgba(232,169,60,0.65);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .winner-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 26px;
+    color: var(--gold);
+    margin-top: 4px;
+    letter-spacing: 0.06em;
+  }
+
+  .hist-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+  .hist-pill {
+    font-size: 12px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.05);
+    color: rgba(255,255,255,0.38);
+    border: 1px solid var(--border);
+  }
+
+  /* OVERLAY VIEW */
+  .overlay-view {
+    padding: 24px 16px 40px;
+    max-width: 680px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .overlay-info {
+    background: rgba(126,200,227,0.07);
+    border: 1px solid rgba(126,200,227,0.2);
+    border-radius: 10px;
+    padding: 14px 16px;
+  }
+  .overlay-info-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--blue);
+    margin-bottom: 6px;
+    letter-spacing: 0.05em;
+  }
+  .overlay-info p {
+    font-size: 12px;
+    color: var(--text-dim);
+    line-height: 1.7;
+  }
+  .overlay-info code {
+    background: rgba(255,255,255,0.08);
+    border-radius: 4px;
+    padding: 1px 6px;
+    font-size: 11px;
+    color: var(--gold);
+    font-family: monospace;
+  }
+
+  .overlay-preview-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .overlay-preview-label {
+    font-size: 10px;
+    color: var(--text-hint);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .stream-mockup {
+    background: #2a5c3a;
+    border-radius: 10px;
+    aspect-ratio: 16/9;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.08);
+  }
+  .stream-mockup-label {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 12px;
+    color: rgba(255,255,255,0.18);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .overlay-widget {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+  }
+
+  /* Overlay table styles */
+  .ov-table {
+    border-collapse: collapse;
+    background: rgba(0,0,0,0.75);
+    border-radius: 7px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.1);
+    font-family: 'Inter', sans-serif;
+  }
+  .ov-table thead th {
+    font-size: 7px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 4px 7px 3px;
+    text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .ov-table thead th.th-team { text-align: left; padding-left: 9px; }
+  .ov-table tbody td {
+    padding: 0 7px;
+    text-align: center;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    height: 26px;
+    white-space: nowrap;
+    border-right: 1px solid rgba(255,255,255,0.05);
+  }
+  .ov-table tbody td:last-child { border-right: none; }
+  .ov-table tbody tr { border-top: 1px solid rgba(255,255,255,0.05); }
+  .ov-table tbody tr:first-child { border-top: none; }
+
+  .ov-team-cell {
+    text-align: left !important;
+    padding-left: 9px !important;
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    color: rgba(255,255,255,0.88) !important;
+    min-width: 100px;
+  }
+  .ov-sets-cell {
+    font-size: 13px !important;
+    color: var(--gold) !important;
+    min-width: 28px;
+  }
+  .ov-set-score {
+    font-size: 12px !important;
+    color: rgba(255,255,255,0.4) !important;
+    min-width: 24px;
+  }
+  .ov-set-score.cur { color: #fff !important; font-size: 13px !important; }
+  .ov-set-score.wa { color: var(--gold) !important; }
+  .ov-set-score.wb { color: var(--blue) !important; }
+  .ov-set-score.em { color: rgba(255,255,255,0.15) !important; font-size: 10px !important; }
+
+  .ov-dot {
+    display: inline-block;
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: var(--gold);
+    margin-right: 4px;
+    vertical-align: middle;
+    margin-top: -1px;
+  }
+  .ov-tournament-cell {
+    font-size: 8px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.45);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-align: center;
+    padding: 5px 10px 4px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .ov-footer {
+    text-align: right;
+    padding: 3px 8px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    font-size: 7px;
+    color: rgba(255,255,255,0.18);
+    letter-spacing: 0.06em;
+  }
+
+  /* Password modal */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+  .modal-box {
+    background: #131e2c;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 28px 28px 24px;
+    width: 320px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .modal-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text);
+    text-align: center;
+  }
+  .modal-sub {
+    font-size: 13px;
+    color: var(--text-dim);
+    text-align: center;
+  }
+  .modal-input {
+    background: rgba(255,255,255,0.07);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    color: var(--text);
+    font-size: 15px;
+    font-family: 'Inter', sans-serif;
+    padding: 10px 14px;
+    width: 100%;
+    outline: none;
+    text-align: center;
+    letter-spacing: 0.15em;
+  }
+  .modal-input:focus { border-color: rgba(232,169,60,0.5); }
+  .modal-btn {
+    background: var(--gold);
+    color: #0c1520;
+    border: none;
+    border-radius: 8px;
+    padding: 11px;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    width: 100%;
+    transition: opacity 0.15s;
+  }
+  .modal-btn:active { opacity: 0.8; }
+  .modal-err {
+    font-size: 12px;
+    color: var(--red-text);
+    text-align: center;
+    min-height: 16px;
+  }
+</style>
+</head>
+<body>
+
+<!-- PASSWORD MODAL -->
+<div class="modal-overlay" id="pw-modal">
+  <div class="modal-box">
+    <div class="modal-title">Вход для судьи</div>
+    <div class="modal-sub">Введите пароль для доступа к панели управления</div>
+    <input class="modal-input" type="password" id="pw-input" placeholder="••••••" onkeydown="if(event.key==='Enter')checkPw()">
+    <button class="modal-btn" onclick="checkPw()">Войти</button>
+    <div class="modal-err" id="pw-err"></div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav class="nav" id="main-nav" style="display:none;">
+  <a class="nav-logo" href="#" onclick="return false;">
+    <span class="nav-logo-text">MY BEACH — КОРТ <span id="nav-court"></span></span>
+  </a>
+  <a class="nav-tab active" id="tab-tv" onclick="switchView('tv')">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="2" width="12" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M5 10v2M9 10v2M4 12h6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+    ТВ-экран
+  </a>
+  <a class="nav-tab" id="tab-admin" onclick="switchView('admin')">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="5.5" stroke="currentColor" stroke-width="1.2"/><path d="M7 4.5v3l2 1" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+    Судья
+  </a>
+  <a class="nav-tab" id="tab-overlay" onclick="switchView('overlay')">
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="3" width="12" height="8" rx="1.5" stroke="currentColor" stroke-width="1.2"/><path d="M4 7h6M4 9.5h4" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+    Оверлей
+  </a>
+</nav>
+
+<!-- ===== TV VIEW ===== -->
+<div class="view tv-view active" id="view-tv" style="display:none;">
+  <div class="tv-logo">
+    <img src="Logotype.png" alt="My Beach" style="height:56px;object-fit:contain;">
+  </div>
+
+  <!-- [6] Название турнира на ТВ -->
+  <div class="tv-tournament" id="tv-tournament"></div>
+
+  <!-- [8] Строка "Партия №" убрана — только точки -->
+  <div class="tv-set-bar">
+    <div class="set-dots" id="tv-dots"></div>
+  </div>
+
+  <div class="tv-scoreboard">
+    <div class="tv-team">
+      <!-- [1] Игроки с подчёркиванием подающего -->
+      <div class="tv-player" id="tv-a1">Иванов</div>
+      <div class="tv-player" id="tv-a2">Петров</div>
+      <div class="tv-score" id="tv-sa">0</div>
+      <div class="tv-serve-dot hidden" id="tv-dot-a"></div>
+    </div>
+    <div class="tv-center">
+      <div class="tv-vs">VS</div>
+      <div class="tv-sets" id="tv-sets">0:0</div>
+    </div>
+    <div class="tv-team">
+      <div class="tv-player" id="tv-b1">Сидоров</div>
+      <div class="tv-player" id="tv-b2">Ким</div>
+      <div class="tv-score" id="tv-sb">0</div>
+      <div class="tv-serve-dot hidden" id="tv-dot-b"></div>
+    </div>
+  </div>
+
+  <div class="tv-history" id="tv-hist"></div>
+</div>
+
+<!-- ===== ADMIN VIEW ===== -->
+<!-- [7] Порядок блоков: счёт → история → игроки → турнир -->
+<div class="view admin-view" id="view-admin" style="display:none;">
+
+  <!-- СЧЁТ -->
+  <div class="asec">
+    <div class="asec-title">Счёт — Партия <span id="adm-setnum">1</span></div>
+    <div class="score-ctrl">
+      <div class="score-side">
+        <div class="score-side-name" id="adm-na">Иванов / Петров</div>
+        <div class="score-adm" id="adm-sa">0</div>
+        <div class="btn-row">
+          <div class="btn-minus" id="btn-minus-left">−</div>
+          <div class="btn-plus" id="btn-plus-left">+</div>
+        </div>
+        <div class="srv-lbl" id="srv-a"></div>
+        <div class="nxt-lbl" id="nxt-a"></div>
+        <button class="btn-timeout" id="btn-to-left" onclick="takeTimeout('left')">ТО</button>
+      </div>
+
+      <div class="score-mid">
+        <div class="colon">:</div>
+        <div class="sets-mid" id="adm-sets">0 — 0</div>
+        <!-- [2] switch-badge теперь кнопка — меняет стороны только в интерфейсе судьи -->
+        <div class="switch-badge" id="switch-badge" onclick="toggleSidesAdmin()">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none" style="flex-shrink:0"><path d="M1 3.5h8M6.5 1l3 2.5-3 2.5M12 9.5H4M6.5 12l-3-2.5 3-2.5" stroke="#7ec8e3" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          смена сторон
+        </div>
+      </div>
+
+      <div class="score-side">
+        <div class="score-side-name" id="adm-nb">Сидоров / Ким</div>
+        <div class="score-adm" id="adm-sb">0</div>
+        <div class="btn-row">
+          <div class="btn-plus" id="btn-plus-right">+</div>
+          <div class="btn-minus" id="btn-minus-right">−</div>
+        </div>
+        <div class="srv-lbl" id="srv-b"></div>
+        <div class="nxt-lbl" id="nxt-b"></div>
+        <button class="btn-timeout" id="btn-to-right" onclick="takeTimeout('right')">ТО</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="winner-card" id="winner-card">
+    <div class="winner-label">Победитель матча</div>
+    <div class="winner-name" id="winner-name"></div>
+  </div>
+
+  <!-- ИСТОРИЯ ПАРТИЙ -->
+  <div class="asec">
+    <div class="asec-title">История партий</div>
+    <div class="hist-pills" id="adm-hist">
+      <span style="font-size:12px;color:var(--text-hint);">Нет завершённых партий</span>
+    </div>
+  </div>
+
+  <!-- ИГРОКИ И ПЕРВАЯ ПОДАЧА -->
+  <div class="asec" id="players-sec">
+    <div class="asec-title">Игроки и первая подача</div>
+    <div class="teams-grid">
+      <div>
+        <div class="team-block-label">Команда А</div>
+        <div id="rows-a"></div>
+        <div class="pick-hint" id="pick-a">Выберите кто подаёт первым у команды А</div>
+      </div>
+      <div>
+        <div class="team-block-label">Команда Б</div>
+        <div id="rows-b"></div>
+        <div class="pick-hint" id="pick-b">Выберите кто подаёт первым у команды Б</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- [6] НАЗВАНИЕ ТУРНИРА -->
+  <div class="asec">
+    <div class="asec-title">Название турнира</div>
+    <div style="display:flex;gap:8px;">
+      <input class="tournament-input" type="text" id="tournament-input"
+        placeholder="Введите название турнира"
+        onkeydown="if(event.key==='Enter')applyTournament()"
+        style="flex:1;">
+      <button class="btn-act btn-end-set" onclick="applyTournament()"
+        style="width:auto;padding:7px 14px;font-size:12px;white-space:nowrap;">
+        Применить
+      </button>
+    </div>
+  </div>
+
+  <!-- ДЕЙСТВИЯ -->
+  <div class="act-row">
+    <button class="btn-act btn-end-set" onclick="endSet()">Завершить партию</button>
+    <!-- [3] Кнопка сброса текущей партии -->
+    <button class="btn-act btn-reset-set" onclick="resetSet()">Сброс партии 0:0</button>
+    <button class="btn-act btn-new-match" onclick="resetMatch()">Новый матч</button>
+  </div>
+
+</div>
+
+<!-- ===== OVERLAY VIEW ===== -->
+<div class="view overlay-view" id="view-overlay" style="display:none;">
+
+  <div class="overlay-info">
+    <div class="overlay-info-title">Как добавить в трансляцию (OBS / Streamlabs)</div>
+    <p>
+      1. Добавьте <strong style="color:var(--text);">Browser Source</strong><br>
+      2. Вставьте URL: <code id="overlay-url">https://gitlexx54.github.io/mybeach/overlay.html</code><br>
+      3. Размер: <code>320 x 90</code> px<br>
+      4. Включите <code>Обновлять браузер при переключении сцены</code><br>
+      5. Разместите в углу — данные обновляются в реальном времени
+    </p>
+  </div>
+
+  <div class="overlay-preview-wrap">
+    <div class="overlay-preview-label">Предпросмотр оверлея</div>
+    <div style="display:inline-block;">
+      <table class="ov-table" id="ov-table-prev">
+        <thead>
+          <tr>
+            <td colspan="5" class="ov-tournament-cell" id="ov-tournament-prev">—</td>
+          </tr>
+          <tr>
+            <th class="th-team">Команда</th>
+            <th>Сеты</th>
+            <th>П1</th>
+            <th>П2</th>
+            <th>П3</th>
+          </tr>
+        </thead>
+        <tbody id="ov-body-prev"></tbody>
+        <tfoot>
+          <tr><td colspan="6" class="ov-footer">my beach</td></tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
+<script>
+// -- CONFIG --
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyAA8lFJKbox0HmRaIsr7Tc9TJhSEblOSsM",
+  authDomain: "mybeachscore.firebaseapp.com",
+  databaseURL: "https://mybeachscore-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "mybeachscore",
+  storageBucket: "mybeachscore.firebasestorage.app",
+  messagingSenderId: "831027179059",
+  appId: "1:831027179059:web:c6dcfe2220973f03023d46"
+};
+const ADMIN_PASSWORD = "mybeach2024";
+
+// -- STATE --
+let S = {
+  scoreA: 0, scoreB: 0,
+  setsA: 0, setsB: 0,
+  setNum: 1,
+  history: [],
+  p: { a1:'Иванов', a2:'Петров', b1:'Сидоров', b2:'Ким' },
+  firstA: null, firstB: null,
+  servingTeam: null,
+  serveRotA: 0, serveRotB: 0,
+  matchOver: false,
+  tournament: '',
+  timeoutA: false,
+  timeoutB: false,
+  sidesSwapped: false
+};
+
+// [2] Локальное состояние смены сторон — только для судьи, не пишется в Firebase
+let adminSidesSwapped = false;
+
+let adminUnlocked = false;
+let currentView = 'tv';
+
+// -- AUTH --
+function checkPw() {
+  const val = document.getElementById('pw-input').value;
+  if (val === ADMIN_PASSWORD) {
+    adminUnlocked = true;
+    localStorage.setItem('adminOk', String(Date.now()));
+    document.getElementById('pw-modal').style.display = 'none';
+    document.getElementById('main-nav').style.display = 'flex';
+    switchView('tv');
+  } else {
+    document.getElementById('pw-err').textContent = 'Неверный пароль';
+    document.getElementById('pw-input').value = '';
+    setTimeout(() => document.getElementById('pw-err').textContent = '', 2000);
+  }
+}
+
+// -- NAVIGATION --
+function switchView(v) {
+  ['tv','admin','overlay'].forEach(id => {
+    document.getElementById('view-'+id).style.display = 'none';
+    document.getElementById('tab-'+id).classList.remove('active');
+  });
+  document.getElementById('view-'+v).style.display = 'flex';
+  document.getElementById('view-'+v).style.flexDirection = 'column';
+  document.getElementById('tab-'+v).classList.add('active');
+  currentView = v;
+}
+
+// -- HELPERS --
+function nameA() { return S.p.a1 + (S.p.a2 ? ' / ' + S.p.a2 : ''); }
+function nameB() { return S.p.b1 + (S.p.b2 ? ' / ' + S.p.b2 : ''); }
+function alt(pk) { return { a1:'a2', a2:'a1', b1:'b2', b2:'b1' }[pk]; }
+
+function getCurrentServer() {
+  if (!S.servingTeam) return { team: null, player: null, next: null };
+  if (S.servingTeam === 'a') {
+    if (!S.firstA) return { team:'a', player:null, next:null };
+    const curr = S.serveRotA % 2 === 0 ? S.firstA : alt(S.firstA);
+    return { team:'a', player:curr, next:alt(curr) };
+  } else {
+    if (!S.firstB) return { team:'b', player:null, next:null };
+    const curr = S.serveRotB % 2 === 0 ? S.firstB : alt(S.firstB);
+    return { team:'b', player:curr, next:alt(curr) };
+  }
+}
+
+// [5] Условие смены сторон: в 3й партии — каждые 5 очков, иначе каждые 7
+function shouldShowSideSwitch() {
+  const total = S.scoreA + S.scoreB;
+  if (total === 0) return true; // показываем с 0:0 — команды могут меняться
+  const threshold = S.setNum === 3 ? 5 : 7;
+  return total % threshold === 0;
+}
+
+// -- PLAYER ROWS --
+function buildRows() {
+  ['a','b'].forEach(team => {
+    const first = team==='a' ? S.firstA : S.firstB;
+    const teamScore = team==='a' ? S.scoreA : S.scoreB;
+    // [4] Галочки активны только пока у команды 0 очков
+    const canPick = teamScore === 0;
+
+    document.getElementById('rows-'+team).innerHTML =
+      [team+'1', team+'2'].map(pk => {
+        const on = first===pk;
+        // gone (бледный, некликабельный) только если нельзя менять И этот не выбран
+        const gone = !canPick && first!==null && !on;
+        // при canPick=true — обе галочки всегда кликабельны (можно переключить)
+        return `<div class="player-row">
+          <div class="chk ${on?'on':''} ${gone?'gone':''}" onclick="pickFirst('${team}','${pk}')">
+            <svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4L4 7L9 1" stroke="#0c1520" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </div>
+          <input class="p-input" id="pinput-${pk}" value="${S.p[pk]}"
+            onchange="updateP('${pk}',this.value)"
+            placeholder="Игрок">
+        </div>`;
+      }).join('');
+
+    const needsPick = (team==='a' && S.servingTeam==='a' && !S.firstA)
+                   || (team==='b' && S.servingTeam==='b' && !S.firstB);
+    document.getElementById('pick-'+team).className = 'pick-hint' + (needsPick?' show':'');
+  });
+
+  const needsAny = (S.servingTeam==='a'&&!S.firstA)||(S.servingTeam==='b'&&!S.firstB);
+  document.getElementById('players-sec').className = 'asec'+(needsAny?' needs-input':'');
+}
+
+function pickFirst(team, pk) {
+  if (S.matchOver) return;
+  // [4] Нельзя менять подающего если у команды уже есть очки
+  const teamScore = team==='a' ? S.scoreA : S.scoreB;
+  if (teamScore > 0) return;
+
+  if (team==='a') { S.firstA=pk; S.serveRotA=0; if(!S.servingTeam) S.servingTeam='a'; }
+  else { S.firstB=pk; S.serveRotB=0; if(!S.servingTeam) S.servingTeam='b'; }
+  buildRows(); renderAll(); saveToFirebase();
+}
+
+// [9] updateP использует onchange вместо oninput — не перестраивает строки при каждом нажатии
+function updateP(key, val) {
+  S.p[key] = val || key.toUpperCase();
+  renderAll(); saveToFirebase();
+}
+
+// [6] Применить название турнира
+function applyTournament() {
+  const val = document.getElementById('tournament-input').value.trim();
+  S.tournament = val;
+  renderAll(); saveToFirebase();
+}
+
+// -- SCORE --
+function chScore(team, delta) {
+  if (S.matchOver) return;
+  if (delta > 0) {
+    const prev = S.servingTeam;
+    if (prev!==null && team!==prev) {
+      if (prev==='a') S.serveRotA++;
+      else S.serveRotB++;
+      S.servingTeam = team;
+    } else if (prev===null) {
+      S.servingTeam = team;
+    }
+  }
+  if (team==='a') S.scoreA = Math.max(0, S.scoreA+delta);
+  else S.scoreB = Math.max(0, S.scoreB+delta);
+  buildRows(); renderAll(); saveToFirebase();
+}
+
+function endSet() {
+  if (S.matchOver) return;
+  const winnerA = S.scoreA >= S.scoreB;
+  S.history.push({ a:S.scoreA, b:S.scoreB, winnerA });
+  if (winnerA) S.setsA++; else S.setsB++;
+  S.scoreA=0; S.scoreB=0; S.setNum++;
+  S.firstA=null; S.firstB=null;
+  S.servingTeam=null; S.serveRotA=0; S.serveRotB=0;
+  S.timeoutA=false; S.timeoutB=false;
+  S.sidesSwapped=false;
+  if (S.setsA>=2||S.setsB>=2) S.matchOver=true;
+  adminSidesSwapped = false; // сбрасываем при новой партии
+  buildRows(); renderAll(); saveToFirebase();
+}
+
+// [3] Сброс текущей партии — только в интерфейсе судьи
+function resetSet() {
+  if (S.matchOver) return;
+  S.scoreA = 0;
+  S.scoreB = 0;
+  S.firstA = null;
+  S.firstB = null;
+  S.servingTeam = null;
+  S.serveRotA = 0;
+  S.serveRotB = 0;
+  S.timeoutA = false;
+  S.timeoutB = false;
+  S.sidesSwapped = false;
+  adminSidesSwapped = false;
+  buildRows(); renderAll(); saveToFirebase();
+}
+
+function resetMatch() {
+  S = {
+    scoreA:0, scoreB:0, setsA:0, setsB:0, setNum:1, history:[],
+    p:{...S.p},
+    firstA:null, firstB:null, servingTeam:null,
+    serveRotA:0, serveRotB:0, matchOver:false,
+    tournament: S.tournament
+  };
+  adminSidesSwapped = false;
+  buildRows(); renderAll(); saveToFirebase();
+}
+
+// Таймаут
+function takeTimeout(side) {
+  if (S.matchOver) return;
+  const leftTeam  = adminSidesSwapped ? 'b' : 'a';
+  const rightTeam = adminSidesSwapped ? 'a' : 'b';
+  const team = side === 'left' ? leftTeam : rightTeam;
+  if (team === 'a') {
+    if (S.timeoutA) return;
+    S.timeoutA = true;
+  } else {
+    if (S.timeoutB) return;
+    S.timeoutB = true;
+  }
+  renderAll(); saveToFirebase();
+}
+
+// Смена сторон — для корта 1 пишем в Firebase (меняется и на ТВ)
+// для кортов 2 и 3 — только локально у судьи
+function toggleSidesAdmin() {
+  adminSidesSwapped = !adminSidesSwapped;
+  if (_courtParam === '1') {
+    S.sidesSwapped = adminSidesSwapped;
+    saveToFirebase();
+  }
+  renderAdmin();
+}
+
+// -- RENDER --
+function renderAll() {
+  renderTV();
+  renderAdmin();
+  renderOverlayPreview();
+}
+
+function renderTV() {
+  const srv = getCurrentServer();
+
+  // [6] Название турнира
+  document.getElementById('tv-tournament').textContent = S.tournament || '';
+
+  // Смена сторон на ТВ — для корта 1 берём из S.sidesSwapped
+  const tvSwapped = _courtParam === '1' ? !!S.sidesSwapped : false;
+
+  // Определяем что показывать слева и справа
+  const leftA  = tvSwapped ? S.p.b1 : S.p.a1;
+  const leftB  = tvSwapped ? S.p.b2 : S.p.a2;
+  const rightA = tvSwapped ? S.p.a1 : S.p.b1;
+  const rightB = tvSwapped ? S.p.a2 : S.p.b2;
+
+  const leftScore  = tvSwapped ? S.scoreB : S.scoreA;
+  const rightScore = tvSwapped ? S.scoreA : S.scoreB;
+  const leftSets   = tvSwapped ? S.setsB  : S.setsA;
+  const rightSets  = tvSwapped ? S.setsA  : S.setsB;
+
+  // Подающий
+  const servingPlayer = srv.player;
+  const leftTeamKey   = tvSwapped ? 'b' : 'a';
+  const rightTeamKey  = tvSwapped ? 'a' : 'b';
+
+  document.getElementById('tv-a1').textContent = leftA;
+  document.getElementById('tv-a2').textContent = leftB;
+  document.getElementById('tv-b1').textContent = rightA;
+  document.getElementById('tv-b2').textContent = rightB;
+
+  // Подчёркивание — определяем по команде
+  const leftServing1  = tvSwapped ? servingPlayer==='b1' : servingPlayer==='a1';
+  const leftServing2  = tvSwapped ? servingPlayer==='b2' : servingPlayer==='a2';
+  const rightServing1 = tvSwapped ? servingPlayer==='a1' : servingPlayer==='b1';
+  const rightServing2 = tvSwapped ? servingPlayer==='a2' : servingPlayer==='b2';
+
+  document.getElementById('tv-a1').className = 'tv-player' + (leftServing1  ? ' serving' : '');
+  document.getElementById('tv-a2').className = 'tv-player' + (leftServing2  ? ' serving' : '');
+  document.getElementById('tv-b1').className = 'tv-player' + (rightServing1 ? ' serving' : '');
+  document.getElementById('tv-b2').className = 'tv-player' + (rightServing2 ? ' serving' : '');
+
+  const leading = leftScore > rightScore ? 'left' : rightScore > leftScore ? 'right' : '';
+
+  document.getElementById('tv-sa').textContent = leftScore;
+  document.getElementById('tv-sb').textContent = rightScore;
+  document.getElementById('tv-sa').className = 'tv-score'+(leading==='left'?' leading':'');
+  document.getElementById('tv-sb').className = 'tv-score'+(leading==='right'?' leading':'');
+
+  // Сеты
+  document.getElementById('tv-sets').textContent = leftSets + ':' + rightSets;
+
+  // Точка подачи
+  const leftDot  = srv.team === leftTeamKey;
+  const rightDot = srv.team === rightTeamKey;
+  document.getElementById('tv-dot-a').className = 'tv-serve-dot' + (leftDot  ? '' : ' hidden');
+  document.getElementById('tv-dot-b').className = 'tv-serve-dot' + (rightDot ? '' : ' hidden');
+  const tvSetNumEl = document.getElementById('tv-setnum');
+  if (tvSetNumEl) tvSetNumEl.textContent = S.setNum;
+
+  let d='';
+  for(let i=0;i<3;i++){
+    if(i<S.setNum-1) d+='<div class="sdot done"></div>';
+    else if(i===S.setNum-1) d+='<div class="sdot active"></div>';
+    else d+='<div class="sdot empty"></div>';
+  }
+  document.getElementById('tv-dots').innerHTML=d;
+  document.getElementById('tv-hist').innerHTML=S.history.map((h,i)=>
+    `<div class="tv-hist-pill">П${i+1}: ${h.a}:${h.b}</div>`).join('');
+}
+
+function renderAdmin() {
+  const srv=getCurrentServer();
+
+  // [2] Применяем локальную смену сторон только для отображения в интерфейсе судьи
+  let sa, sb, naText, nbText, srvAText, srvBText, nxtAText, nxtBText;
+
+  if (!adminSidesSwapped) {
+    sa = S.scoreA; sb = S.scoreB;
+    naText = nameA(); nbText = nameB();
+    srvAText = srv.team==='a' && srv.player ? 'Подача: '+S.p[srv.player] : '';
+    srvBText = srv.team==='b' && srv.player ? 'Подача: '+S.p[srv.player] : '';
+    nxtAText = srv.team==='a' && srv.next ? 'Следующий: '+S.p[srv.next] : '';
+    nxtBText = srv.team==='b' && srv.next ? 'Следующий: '+S.p[srv.next] : '';
+  } else {
+    // Поменяли местами: команда Б слева, команда А справа
+    sa = S.scoreB; sb = S.scoreA;
+    naText = nameB(); nbText = nameA();
+    srvAText = srv.team==='b' && srv.player ? 'Подача: '+S.p[srv.player] : '';
+    srvBText = srv.team==='a' && srv.player ? 'Подача: '+S.p[srv.player] : '';
+    nxtAText = srv.team==='b' && srv.next ? 'Следующий: '+S.p[srv.next] : '';
+    nxtBText = srv.team==='a' && srv.next ? 'Следующий: '+S.p[srv.next] : '';
+  }
+
+  const leading = sa>sb?'a':sb>sa?'b':'';
+
+  // Назначаем кнопки с учётом swap
+  const leftTeam  = adminSidesSwapped ? 'b' : 'a';
+  const rightTeam = adminSidesSwapped ? 'a' : 'b';
+
+  // Блокируем + если подающий не выбран для этой команды
+  const leftFirst  = leftTeam==='a'  ? S.firstA : S.firstB;
+  const rightFirst = rightTeam==='a' ? S.firstA : S.firstB;
+
+  const btnPlusLeft  = document.getElementById('btn-plus-left');
+  const btnPlusRight = document.getElementById('btn-plus-right');
+
+  btnPlusLeft.onclick  = leftFirst  ? () => chScore(leftTeam, 1)  : null;
+  btnPlusLeft.style.opacity  = leftFirst  ? '1' : '0.3';
+  btnPlusLeft.style.cursor   = leftFirst  ? 'pointer' : 'not-allowed';
+
+  btnPlusRight.onclick  = rightFirst ? () => chScore(rightTeam, 1) : null;
+  btnPlusRight.style.opacity  = rightFirst ? '1' : '0.3';
+  btnPlusRight.style.cursor   = rightFirst ? 'pointer' : 'not-allowed';
+
+  document.getElementById('btn-minus-left').onclick  = () => chScore(leftTeam, -1);
+  document.getElementById('btn-minus-right').onclick = () => chScore(rightTeam, -1);
+
+  document.getElementById('adm-sa').textContent=sa;
+  document.getElementById('adm-sb').textContent=sb;
+  document.getElementById('adm-sa').className='score-adm'+(leading==='a'?' leading':'');
+  document.getElementById('adm-sb').className='score-adm'+(leading==='b'?' leading':'');
+  document.getElementById('adm-na').textContent=naText;
+  document.getElementById('adm-nb').textContent=nbText;
+  document.getElementById('adm-sets').textContent=S.setsA+' — '+S.setsB;
+  document.getElementById('adm-setnum').textContent=S.setNum;
+
+  // [5] Условие смены сторон
+  document.getElementById('switch-badge').className='switch-badge'+(shouldShowSideSwitch()?' show':'');
+
+  document.getElementById('srv-a').textContent=srvAText;
+  document.getElementById('srv-b').textContent=srvBText;
+  document.getElementById('nxt-a').textContent=nxtAText;
+  document.getElementById('nxt-b').textContent=nxtBText;
+
+  document.getElementById('adm-hist').innerHTML=!S.history.length
+    ?'<span style="font-size:12px;color:var(--text-hint);">Нет завершённых партий</span>'
+    :S.history.map((h,i)=>`<div class="hist-pill">П${i+1}: ${h.a}:${h.b} → ${h.winnerA?S.p.a1:S.p.b1}</div>`).join('');
+
+  // Таймаут кнопки с учётом swap
+  const toLeftTeam  = adminSidesSwapped ? 'b' : 'a';
+  const toRightTeam = adminSidesSwapped ? 'a' : 'b';
+  const toLeftUsed  = toLeftTeam  === 'a' ? S.timeoutA : S.timeoutB;
+  const toRightUsed = toRightTeam === 'a' ? S.timeoutA : S.timeoutB;
+  const btnToLeft  = document.getElementById('btn-to-left');
+  const btnToRight = document.getElementById('btn-to-right');
+  if (btnToLeft)  { btnToLeft.className  = 'btn-timeout' + (toLeftUsed  ? ' used' : ''); btnToLeft.disabled  = toLeftUsed; }
+  if (btnToRight) { btnToRight.className = 'btn-timeout' + (toRightUsed ? ' used' : ''); btnToRight.disabled = toRightUsed; }
+
+  const wc=document.getElementById('winner-card');
+  wc.className='winner-card'+(S.matchOver?' show':'');
+  if(S.matchOver) document.getElementById('winner-name').textContent=S.setsA>=2?nameA():nameB();
+
+  // [6] Синхронизируем поле турнира только если не в фокусе
+  const ti = document.getElementById('tournament-input');
+  if (ti && document.activeElement !== ti) {
+    ti.value = S.tournament || '';
+  }
+}
+
+function renderOverlayTable(bodyId) {
+  const srv=getCurrentServer();
+  const rows=['a','b'].map(team=>{
+    const isA=team==='a';
+    const name=isA?S.p.a1+' / '+S.p.a2:S.p.b1+' / '+S.p.b2;
+    const sets=isA?S.setsA:S.setsB;
+    const curr=isA?S.scoreA:S.scoreB;
+    const serving=srv.team===team;
+    let cells='';
+    for(let i=0;i<3;i++){
+      if(i<S.history.length){
+        const h=S.history[i];
+        const sc=isA?h.a:h.b;
+        const won=isA?h.winnerA:!h.winnerA;
+        cells+=`<td class="ov-set-score ${won?'wa':'wb'}">${sc}</td>`;
+      } else if(i===S.history.length){
+        cells+=`<td class="ov-set-score cur">${curr}</td>`;
+      } else {
+        cells+=`<td class="ov-set-score em">—</td>`;
+      }
+    }
+    return `<tr>
+      <td class="ov-team-cell">${serving?'<span class="ov-dot"></span>':''}${name}</td>
+      <td class="ov-sets-cell">${sets}</td>
+      ${cells}
+    </tr>`;
+  });
+  document.getElementById(bodyId).innerHTML=rows.join('');
+}
+
+function renderOverlayPreview() {
+  renderOverlayTable('ov-body-prev');
+  const t = document.getElementById('ov-tournament-prev');
+  if (t) t.textContent = S.tournament || '—';
+}
+
+// -- COURT --
+const _courtParam = new URLSearchParams(window.location.search).get('court');
+if (!_courtParam) { window.location.replace('https://gitlexx54.github.io/mybeach/lobby.html'); }
+const _courtPath = 'match_court' + _courtParam;
+document.title = 'My Beach — Корт ' + _courtParam;
+
+// -- FIREBASE --
+const _app = firebase.initializeApp(FIREBASE_CONFIG);
+const _db = firebase.database();
+const _ref = _db.ref(_courtPath);
+
+let _writing = false;
+
+function saveToFirebase() {
+  _writing = true;
+  _ref.set(S, () => {
+    setTimeout(() => { _writing = false; }, 300);
+  });
+}
+
+_ref.on('value', (snapshot) => {
+  if (_writing) return;
+  const data = snapshot.val();
+  if (!data) return;
+
+  S = Object.assign({
+    scoreA: 0, scoreB: 0,
+    setsA: 0, setsB: 0,
+    setNum: 1,
+    history: [],
+    p: { a1:'', a2:'', b1:'', b2:'' },
+    firstA: null, firstB: null,
+    servingTeam: null,
+    serveRotA: 0, serveRotB: 0,
+    matchOver: false,
+    tournament: '',
+    timeoutA: false,
+    timeoutB: false,
+    sidesSwapped: false
+  }, data);
+
+  if (!S.firstA)      S.firstA = null;
+  if (!S.firstB)      S.firstB = null;
+  if (!S.servingTeam) S.servingTeam = null;
+  if (!S.history)     S.history = [];
+  if (!S.p)           S.p = { a1:'', a2:'', b1:'', b2:'' };
+  if (!S.tournament)  S.tournament = '';
+  // Для корта 1 синхронизируем локальный swap из Firebase
+  if (_courtParam === '1') adminSidesSwapped = !!S.sidesSwapped;
+
+  buildRows();
+  renderAll();
+});
+
+// -- INIT --
+document.getElementById('nav-court').textContent = _courtParam;
+
+// Восстанавливаем сессию — запоминаем на 7 дней
+const _savedAuth = localStorage.getItem('adminOk');
+const _weekMs = 7 * 24 * 60 * 60 * 1000;
+if (_savedAuth && (Date.now() - Number(_savedAuth)) < _weekMs) {
+  adminUnlocked = true;
+  document.getElementById('pw-modal').style.display = 'none';
+  document.getElementById('main-nav').style.display = 'flex';
+  switchView('tv');
+}
+
+buildRows();
+renderAll();
+</script>
+</body>
+</html>

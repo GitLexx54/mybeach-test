@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Beach — Все корты</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap');
+
+  :root {
+    --gold: #e8a93c;
+    --bg: #0c1520;
+    --bg2: rgba(255,255,255,0.04);
+    --border: rgba(255,255,255,0.08);
+    --text: #ffffff;
+    --text-dim: rgba(255,255,255,0.45);
+    --text-hint: rgba(255,255,255,0.22);
+    --blue: #7ec8e3;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 24px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(12,21,32,0.95);
+  }
+  .header img { height: 36px; object-fit: contain; }
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 0.08em;
+    color: var(--gold);
+  }
+  .header-sub {
+    font-size: 11px;
+    color: var(--text-hint);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    margin-left: auto;
+  }
+
+  /* COURTS GRID */
+  .courts {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px;
+    padding: 28px 24px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  /* COURT CARD */
+  .court-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: border-color 0.3s;
+  }
+  .court-card:hover { border-color: rgba(232,169,60,0.3); }
+
+  .court-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    background: rgba(255,255,255,0.02);
+  }
+  .court-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-hint);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+  .court-tournament {
+    font-size: 11px;
+    color: var(--gold);
+    letter-spacing: 0.06em;
+    text-align: right;
+    max-width: 180px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* SCORE BLOCK */
+  .court-score {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    padding: 20px 16px 16px;
+    gap: 8px;
+  }
+  .court-team {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .court-player {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.75);
+    text-align: center;
+    line-height: 1.3;
+  }
+  .court-player.serving {
+    color: var(--gold);
+    border-bottom: 1.5px solid var(--gold);
+    padding-bottom: 1px;
+  }
+  .court-pts {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 72px;
+    line-height: 1;
+    color: rgba(255,255,255,0.65);
+    letter-spacing: 1px;
+    margin-top: 6px;
+  }
+  .court-pts.leading { color: var(--gold); }
+
+  .court-mid {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .court-sets {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    color: rgba(255,255,255,0.45);
+    letter-spacing: 4px;
+  }
+  .set-dots {
+    display: flex;
+    gap: 5px;
+  }
+  .sdot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+  }
+  .sdot.done { background: var(--gold); }
+  .sdot.active { background: rgba(232,169,60,0.3); border: 1.5px solid var(--gold); }
+  .sdot.empty { background: rgba(255,255,255,0.1); }
+
+  /* HISTORY */
+  .court-hist {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    padding: 0 16px 14px;
+  }
+  .hist-pill {
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.04);
+    color: rgba(255,255,255,0.3);
+    border: 1px solid var(--border);
+  }
+
+  /* TIMEOUT */
+  .court-timeouts {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 16px 16px;
+  }
+  .to-badge {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    padding: 3px 10px;
+    border-radius: 6px;
+    border: 1px solid rgba(232,169,60,0.3);
+    color: var(--gold);
+    background: rgba(232,169,60,0.08);
+  }
+  .to-badge.used {
+    border-color: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.2);
+    background: transparent;
+    text-decoration: line-through;
+  }
+
+  /* WINNER */
+  .court-winner {
+    margin: 0 16px 14px;
+    padding: 8px 12px;
+    background: rgba(232,169,60,0.1);
+    border: 1px solid rgba(232,169,60,0.28);
+    border-radius: 8px;
+    text-align: center;
+    display: none;
+  }
+  .court-winner.show { display: block; }
+  .court-winner-label {
+    font-size: 9px;
+    color: rgba(232,169,60,0.6);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    font-weight: 600;
+  }
+  .court-winner-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 18px;
+    color: var(--gold);
+    letter-spacing: 0.06em;
+    margin-top: 2px;
+  }
+
+  /* LINKS */
+  .court-links {
+    display: flex;
+    gap: 8px;
+    padding: 12px 16px;
+    border-top: 1px solid var(--border);
+    background: rgba(255,255,255,0.02);
+  }
+  .court-link {
+    font-size: 11px;
+    padding: 5px 12px;
+    border-radius: 6px;
+    text-decoration: none;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    transition: opacity 0.15s;
+  }
+  .court-link:active { opacity: 0.7; }
+  .court-link.judge {
+    background: rgba(232,169,60,0.12);
+    color: var(--gold);
+    border: 1px solid rgba(232,169,60,0.3);
+  }
+  .court-link.tv {
+    background: rgba(255,255,255,0.05);
+    color: var(--text-dim);
+    border: 1px solid var(--border);
+  }
+  .court-link.obs {
+    background: rgba(126,200,227,0.08);
+    color: var(--blue);
+    border: 1px solid rgba(126,200,227,0.25);
+  }
+
+  /* FOOTER */
+  .footer {
+    text-align: center;
+    padding: 20px;
+    font-size: 11px;
+    color: var(--text-hint);
+    letter-spacing: 0.08em;
+    border-top: 1px solid var(--border);
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <img src="Logotype.png" alt="My Beach">
+  <div class="header-sub">Все корты — Live</div>
+</div>
+
+<div class="courts" id="courts-grid"></div>
+
+<div class="footer">my beach scoreboard · обновляется в реальном времени</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script>
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyAA8lFJKbox0HmRaIsr7Tc9TJhSEblOSsM",
+  authDomain: "mybeachscore.firebaseapp.com",
+  databaseURL: "https://mybeachscore-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "mybeachscore",
+  storageBucket: "mybeachscore.firebasestorage.app",
+  messagingSenderId: "831027179059",
+  appId: "1:831027179059:web:c6dcfe2220973f03023d46"
+};
+
+const COURTS = [1, 2, 3];
+const BASE_URL = 'https://gitlexx54.github.io/mybeach/';
+
+// Состояние каждого корта
+const state = {};
+COURTS.forEach(n => {
+  state[n] = {
+    scoreA:0, scoreB:0, setsA:0, setsB:0, setNum:1,
+    history:[], matchOver:false, tournament:'',
+    p:{a1:'—',a2:'',b1:'—',b2:''},
+    servingTeam:null, firstA:null, firstB:null,
+    serveRotA:0, serveRotB:0,
+    timeoutA:false, timeoutB:false
+  };
+});
+
+function alt(pk) { return {a1:'a2',a2:'a1',b1:'b2',b2:'b1'}[pk]; }
+
+function getServer(S) {
+  if (!S.servingTeam) return null;
+  if (S.servingTeam === 'a') {
+    if (!S.firstA) return null;
+    return S.serveRotA % 2 === 0 ? S.firstA : alt(S.firstA);
+  } else {
+    if (!S.firstB) return null;
+    return S.serveRotB % 2 === 0 ? S.firstB : alt(S.firstB);
+  }
+}
+
+function buildCard(n) {
+  return `<div class="court-card" id="card-${n}">
+    <div class="court-header">
+      <div class="court-label">Корт ${n}</div>
+      <div class="court-tournament" id="c${n}-tournament">—</div>
+    </div>
+    <div class="court-score">
+      <div class="court-team">
+        <div class="court-player" id="c${n}-a1">—</div>
+        <div class="court-player" id="c${n}-a2"></div>
+        <div class="court-pts" id="c${n}-sa">0</div>
+      </div>
+      <div class="court-mid">
+        <div class="set-dots" id="c${n}-dots"></div>
+        <div class="court-sets" id="c${n}-sets">0:0</div>
+      </div>
+      <div class="court-team">
+        <div class="court-player" id="c${n}-b1">—</div>
+        <div class="court-player" id="c${n}-b2"></div>
+        <div class="court-pts" id="c${n}-sb">0</div>
+      </div>
+    </div>
+    <div class="court-timeouts">
+      <div class="to-badge" id="c${n}-toa">ТО: А</div>
+      <div class="to-badge" id="c${n}-tob">ТО: Б</div>
+    </div>
+    <div class="court-hist" id="c${n}-hist"></div>
+    <div class="court-winner" id="c${n}-winner">
+      <div class="court-winner-label">Победитель</div>
+      <div class="court-winner-name" id="c${n}-winner-name"></div>
+    </div>
+    <div class="court-links">
+      <a class="court-link judge" href="https://gitlexx54.github.io/mybeach/index.html?court=${n}" target="_blank">Судья</a>
+      <a class="court-link tv" href="https://gitlexx54.github.io/mybeach/index.html?court=${n}#tv" target="_blank">ТВ-экран</a>
+      <a class="court-link obs" href="https://gitlexx54.github.io/mybeach/overlay.html?court=${n}" target="_blank">OBS оверлей</a>
+    </div>
+  </div>`;
+}
+
+function renderCourt(n) {
+  const S = state[n];
+  const srv = getServer(S);
+  const leading = S.scoreA > S.scoreB ? 'a' : S.scoreB > S.scoreA ? 'b' : '';
+
+  document.getElementById(`c${n}-tournament`).textContent = S.tournament || '—';
+
+  // Players
+  const setPlayer = (id, name, isServing) => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = name || '';
+    el.className = 'court-player' + (isServing ? ' serving' : '');
+  };
+  setPlayer(`c${n}-a1`, S.p.a1, srv === 'a1');
+  setPlayer(`c${n}-a2`, S.p.a2, srv === 'a2');
+  setPlayer(`c${n}-b1`, S.p.b1, srv === 'b1');
+  setPlayer(`c${n}-b2`, S.p.b2, srv === 'b2');
+
+  // Scores
+  const sa = document.getElementById(`c${n}-sa`);
+  const sb = document.getElementById(`c${n}-sb`);
+  sa.textContent = S.scoreA;
+  sb.textContent = S.scoreB;
+  sa.className = 'court-pts' + (leading === 'a' ? ' leading' : '');
+  sb.className = 'court-pts' + (leading === 'b' ? ' leading' : '');
+
+  // Sets
+  document.getElementById(`c${n}-sets`).textContent = S.setsA + ':' + S.setsB;
+
+  // Dots
+  let dots = '';
+  for (let i = 0; i < 3; i++) {
+    if (i < S.setNum - 1) dots += '<div class="sdot done"></div>';
+    else if (i === S.setNum - 1) dots += '<div class="sdot active"></div>';
+    else dots += '<div class="sdot empty"></div>';
+  }
+  document.getElementById(`c${n}-dots`).innerHTML = dots;
+
+  // History
+  const hist = document.getElementById(`c${n}-hist`);
+  hist.innerHTML = S.history.length
+    ? S.history.map((h,i) => `<div class="hist-pill">П${i+1}: ${h.a}:${h.b}</div>`).join('')
+    : '';
+
+  // Timeouts
+  const toA = document.getElementById(`c${n}-toa`);
+  const toB = document.getElementById(`c${n}-tob`);
+  toA.className = 'to-badge' + (S.timeoutA ? ' used' : '');
+  toB.className = 'to-badge' + (S.timeoutB ? ' used' : '');
+  toA.textContent = 'ТО: ' + (S.p.a1 || 'А');
+  toB.textContent = 'ТО: ' + (S.p.b1 || 'Б');
+
+  // Winner
+  const wCard = document.getElementById(`c${n}-winner`);
+  const wName = document.getElementById(`c${n}-winner-name`);
+  if (S.matchOver) {
+    wCard.className = 'court-winner show';
+    const winA = S.setsA >= 2;
+    wName.textContent = winA
+      ? (S.p.a1 + (S.p.a2 ? ' / ' + S.p.a2 : ''))
+      : (S.p.b1 + (S.p.b2 ? ' / ' + S.p.b2 : ''));
+  } else {
+    wCard.className = 'court-winner';
+  }
+}
+
+// Build cards
+const grid = document.getElementById('courts-grid');
+grid.innerHTML = COURTS.map(n => buildCard(n)).join('');
+
+// Firebase
+firebase.initializeApp(FIREBASE_CONFIG);
+const db = firebase.database();
+
+COURTS.forEach(n => {
+  db.ref('match_court' + n).on('value', snapshot => {
+    const data = snapshot.val();
+    if (!data) return;
+    const S = state[n];
+    S.scoreA     = data.scoreA     || 0;
+    S.scoreB     = data.scoreB     || 0;
+    S.setsA      = data.setsA      || 0;
+    S.setsB      = data.setsB      || 0;
+    S.setNum     = data.setNum     || 1;
+    S.history    = data.history    || [];
+    S.matchOver  = data.matchOver  || false;
+    S.tournament = data.tournament || '';
+    S.p          = data.p          || {a1:'—',a2:'',b1:'—',b2:''};
+    S.servingTeam= data.servingTeam|| null;
+    S.firstA     = data.firstA     || null;
+    S.firstB     = data.firstB     || null;
+    S.serveRotA  = data.serveRotA  || 0;
+    S.serveRotB  = data.serveRotB  || 0;
+    S.timeoutA   = data.timeoutA   || false;
+    S.timeoutB   = data.timeoutB   || false;
+    renderCourt(n);
+  });
+});
+</script>
+</body>
+</html>

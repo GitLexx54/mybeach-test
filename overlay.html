@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>My Beach — Overlay</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    background: transparent !important;
+    width: 320px;
+    height: auto;
+    overflow: hidden;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    display: inline-block;
+  }
+
+  .ov-table {
+    border-collapse: collapse;
+    background: rgba(0, 0, 0, 0.76);
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.1);
+    width: 100%;
+  }
+
+  .ov-tournament-cell {
+    font-size: 8px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.55);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-align: center;
+    padding: 4px 10px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .ov-tournament-cell img {
+    height: 14px;
+    object-fit: contain;
+    opacity: 0.85;
+    flex-shrink: 0;
+  }
+
+  .ov-table thead th {
+    font-size: 7px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.3);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 5px 8px 4px;
+    text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .ov-table thead th.th-team { text-align: left; padding-left: 10px; }
+
+  .ov-table tbody td {
+    padding: 0 8px;
+    text-align: center;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    height: 27px;
+    white-space: nowrap;
+    border-right: 1px solid rgba(255,255,255,0.05);
+  }
+  .ov-table tbody td:last-child { border-right: none; }
+  .ov-table tbody tr { border-top: 1px solid rgba(255,255,255,0.05); }
+  .ov-table tbody tr:first-child { border-top: none; }
+
+  .ov-team-cell {
+    text-align: left !important;
+    padding-left: 10px !important;
+    font-size: 11px !important;
+    font-weight: 500 !important;
+    color: rgba(255,255,255,0.9) !important;
+    min-width: 110px;
+  }
+  .ov-sets-cell {
+    font-size: 13px !important;
+    color: #e8a93c !important;
+    min-width: 28px;
+    font-weight: 700 !important;
+  }
+  .ov-set-score {
+    font-size: 12px !important;
+    color: rgba(255,255,255,0.38) !important;
+    min-width: 26px;
+  }
+  .ov-set-score.cur { color: #fff !important; font-size: 13px !important; font-weight: 700 !important; }
+  .ov-set-score.wa { color: #e8a93c !important; }
+  .ov-set-score.wb { color: #7ec8e3 !important; }
+  .ov-set-score.em { color: rgba(255,255,255,0.14) !important; font-size: 10px !important; }
+
+  .ov-dot {
+    display: inline-block;
+    width: 5px; height: 5px;
+    border-radius: 50%;
+    background: #e8a93c;
+    margin-right: 4px;
+    vertical-align: middle;
+    margin-top: -1px;
+  }
+
+  .ov-footer {
+    text-align: right;
+    padding: 3px 9px;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    font-size: 7px;
+    color: rgba(255,255,255,0.18);
+    letter-spacing: 0.07em;
+  }
+</style>
+</head>
+<body>
+
+<table class="ov-table">
+  <thead>
+    <tr>
+      <td colspan="5" class="ov-tournament-cell" id="ov-tournament">—</td>
+    </tr>
+    <tr>
+      <th class="th-team">Команда</th>
+      <th>Сеты</th>
+      <th>П1</th>
+      <th>П2</th>
+      <th>П3</th>
+    </tr>
+  </thead>
+  <tbody id="ov-body"></tbody>
+  <tfoot>
+    <tr><td colspan="6" class="ov-footer">my beach</td></tr>
+  </tfoot>
+</table>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+<script>
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyAA8lFJKbox0HmRaIsr7Tc9TJhSEblOSsM",
+  authDomain: "mybeachscore.firebaseapp.com",
+  databaseURL: "https://mybeachscore-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "mybeachscore",
+  storageBucket: "mybeachscore.firebasestorage.app",
+  messagingSenderId: "831027179059",
+  appId: "1:831027179059:web:c6dcfe2220973f03023d46"
+};
+
+let S = {
+  scoreA: 0, scoreB: 0,
+  setsA: 0, setsB: 0,
+  history: [],
+  p: { a1:'', a2:'', b1:'', b2:'' },
+  servingTeam: null,
+  firstA: null, firstB: null,
+  serveRotA: 0, serveRotB: 0,
+  tournament: ''
+};
+
+function alt(pk) { return { a1:'a2', a2:'a1', b1:'b2', b2:'b1' }[pk]; }
+
+function getCurrentServer() {
+  if (!S.servingTeam) return { team: null, player: null };
+  if (S.servingTeam === 'a') {
+    if (!S.firstA) return { team:'a', player:null };
+    const curr = S.serveRotA % 2 === 0 ? S.firstA : alt(S.firstA);
+    return { team:'a', player:curr };
+  } else {
+    if (!S.firstB) return { team:'b', player:null };
+    const curr = S.serveRotB % 2 === 0 ? S.firstB : alt(S.firstB);
+    return { team:'b', player:curr };
+  }
+}
+
+function render() {
+  const srv = getCurrentServer();
+
+  // Турнир — всегда показываем, если пусто — прочерк
+  const tourEl = document.getElementById('ov-tournament');
+  tourEl.innerHTML = '<img src="Logotype.png" alt="My Beach"><span>' + (S.tournament || '—') + '</span>';
+
+  const rows = ['a','b'].map(team => {
+    const isA = team === 'a';
+    const p1 = isA ? S.p.a1 : S.p.b1;
+    const p2 = isA ? S.p.a2 : S.p.b2;
+    const name = p2 ? p1 + ' / ' + p2 : p1;
+    const sets = isA ? S.setsA : S.setsB;
+    const curr = isA ? S.scoreA : S.scoreB;
+    const serving = srv.team === team;
+
+    let cells = '';
+    for (let i = 0; i < 3; i++) {
+      if (i < S.history.length) {
+        const h = S.history[i];
+        const sc = isA ? h.a : h.b;
+        const won = isA ? h.winnerA : !h.winnerA;
+        cells += `<td class="ov-set-score ${won?'wa':'wb'}">${sc}</td>`;
+      } else if (i === S.history.length) {
+        cells += `<td class="ov-set-score cur">${curr}</td>`;
+      } else {
+        cells += `<td class="ov-set-score em">—</td>`;
+      }
+    }
+
+    return `<tr>
+      <td class="ov-team-cell">${serving ? '<span class="ov-dot"></span>' : ''}${name}</td>
+      <td class="ov-sets-cell">${sets}</td>
+      ${cells}
+    </tr>`;
+  });
+
+  document.getElementById('ov-body').innerHTML = rows.join('');
+}
+
+firebase.initializeApp(FIREBASE_CONFIG);
+
+// Читаем корт из URL — ?court=1/2/3
+const _courtParam = new URLSearchParams(window.location.search).get('court') || '1';
+const _courtPath = 'match_court' + _courtParam;
+
+firebase.database().ref(_courtPath).on('value', snapshot => {
+  const data = snapshot.val();
+  if (!data) return;
+  S.scoreA      = data.scoreA      || 0;
+  S.scoreB      = data.scoreB      || 0;
+  S.setsA       = data.setsA       || 0;
+  S.setsB       = data.setsB       || 0;
+  S.history     = data.history     || [];
+  S.p           = data.p           || { a1:'', a2:'', b1:'', b2:'' };
+  S.servingTeam = data.servingTeam || null;
+  S.firstA      = data.firstA      || null;
+  S.firstB      = data.firstB      || null;
+  S.serveRotA   = data.serveRotA   || 0;
+  S.serveRotB   = data.serveRotB   || 0;
+  S.tournament  = data.tournament  || '';
+  render();
+});
+</script>
+</body>
+</html>
