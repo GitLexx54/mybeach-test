@@ -23,7 +23,7 @@
 
   .ov-table {
     border-collapse: collapse;
-    background: rgba(0, 0, 0, 0.76);
+    background: rgba(0, 0, 0, 0.60);
     border-radius: 8px;
     overflow: hidden;
     border: 1px solid rgba(255,255,255,0.1);
@@ -36,19 +36,21 @@
     color: rgba(255,255,255,0.55);
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    padding: 4px 8px;
+    padding: 0;
     border-bottom: 1px solid rgba(255,255,255,0.08);
+  }
+  .ov-tournament-cell .ov-tour-inner {
     display: grid;
     grid-template-columns: 36px 1fr 36px;
     align-items: center;
+    padding: 4px 8px;
   }
   .ov-tournament-cell img {
     height: 14px;
     object-fit: contain;
     opacity: 0.85;
-    flex-shrink: 0;
   }
-  .ov-tournament-cell span {
+  .ov-tournament-cell .ov-tour-text {
     text-align: center;
   }
 
@@ -187,7 +189,7 @@ function render() {
 
   // Турнир — всегда показываем, если пусто — прочерк
   const tourEl = document.getElementById('ov-tournament');
-  tourEl.innerHTML = '<img src="Logotype.png" alt="My Beach" style="justify-self:start"><span>' + (S.tournament || '—') + '</span><span></span>';
+  tourEl.innerHTML = '<div class="ov-tour-inner"><img src="Logotype.png" alt="My Beach"><span class="ov-tour-text">' + (S.tournament || '—') + '</span><span></span></div>';
 
   const rows = ['a','b'].map(team => {
     const isA = team === 'a';
