@@ -700,8 +700,18 @@
     letter-spacing: 0.12em;
     text-transform: uppercase;
     text-align: center;
-    padding: 5px 10px 4px;
+    padding: 4px 10px;
     border-bottom: 1px solid rgba(255,255,255,0.08);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+  }
+  .ov-tournament-cell img {
+    height: 14px;
+    object-fit: contain;
+    opacity: 0.85;
+    flex-shrink: 0;
   }
   .ov-footer {
     text-align: right;
@@ -1426,7 +1436,7 @@ function renderOverlayTable(bodyId) {
 function renderOverlayPreview() {
   renderOverlayTable('ov-body-prev');
   const t = document.getElementById('ov-tournament-prev');
-  if (t) t.textContent = S.tournament || '—';
+  if (t) t.innerHTML = '<img src="Logotype.png" alt="My Beach" style="height:14px;object-fit:contain;opacity:0.85;flex-shrink:0;"><span>' + (S.tournament || '—') + '</span>';
 }
 
 // -- COURT --
