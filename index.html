@@ -699,19 +699,20 @@
     color: rgba(255,255,255,0.45);
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    text-align: center;
-    padding: 4px 10px;
+    padding: 4px 8px;
     border-bottom: 1px solid rgba(255,255,255,0.08);
-    display: flex;
+    display: grid;
+    grid-template-columns: 36px 1fr 36px;
     align-items: center;
-    justify-content: center;
-    gap: 6px;
   }
   .ov-tournament-cell img {
     height: 14px;
     object-fit: contain;
     opacity: 0.85;
-    flex-shrink: 0;
+    justify-self: start;
+  }
+  .ov-tournament-cell span {
+    text-align: center;
   }
   .ov-footer {
     text-align: right;
@@ -1436,7 +1437,7 @@ function renderOverlayTable(bodyId) {
 function renderOverlayPreview() {
   renderOverlayTable('ov-body-prev');
   const t = document.getElementById('ov-tournament-prev');
-  if (t) t.innerHTML = '<img src="Logotype.png" alt="My Beach" style="height:14px;object-fit:contain;opacity:0.85;flex-shrink:0;"><span>' + (S.tournament || '—') + '</span>';
+  if (t) t.innerHTML = '<img src="Logotype.png" alt="My Beach" style="height:14px;object-fit:contain;opacity:0.85;justify-self:start"><span>' + (S.tournament || '—') + '</span><span></span>';
 }
 
 // -- COURT --
